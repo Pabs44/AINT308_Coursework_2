@@ -8,7 +8,7 @@ using namespace cv;
 
 //a drawing function that can draw a line based on rho and theta values.
 //useful for drawing lines from the hough line detector.
-void lineRT(Mat &Src, Vec2f L, Scalar color, int thickness){
+void lineRT(Mat &Src, Vec2f L, Vec3b color, int thickness){
     Point pt1, pt2;
     double a = cos(static_cast<double>(L[1]));
     double b = sin(static_cast<double>(L[1]));
@@ -42,27 +42,22 @@ int main()
         }
 
         //==========================Your code goes here==========================
+        Mat outputFrame;
+        Canny(Frame, outputFrame, 50, 100);
 
+        int rhoRes = 1;
+        int Threshold = 330;
+        vector<Vec2f> lines;
+        HoughLines(outputFrame, lines, rhoRes, CV_PI/180, Threshold, 0, 0);
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+        Vec3b color = cv::Vec3b(250,0,40);
+        for(int i = 0; i < (int)lines.size(); i++){
+            lineRT(Frame, lines[i], color, 2);
+        }
 
         //display frame
         imshow("Video", Frame);
+        imshow("Canny", outputFrame);
         waitKey(10);
     }
 }

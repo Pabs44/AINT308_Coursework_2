@@ -7,11 +7,11 @@
 using namespace cv;
 using namespace std;
 
-int main(int argc, char** argv)
+int main()
 {
     //Calibration file paths (you need to make these)
-    string intrinsic_filename = "";
-    string extrinsic_filename = "";
+    string intrinsic_filename = "../intrinsics.xml";
+    string extrinsic_filename = "../extrinsics.xml";
 
     //================================================Load Calibration Files===============================================
     //This code loads in the intrinsics.xml and extrinsics.xml calibration files, and creates: map11, map12, map21, map22.
@@ -25,7 +25,6 @@ int main(int argc, char** argv)
         printf("Failed to open file %s\n", intrinsic_filename.c_str());
         return -1;
     }
-
     Mat M1, D1, M2, D2;
     fs["M1"] >> M1;
     fs["D1"] >> D1;
@@ -33,8 +32,7 @@ int main(int argc, char** argv)
     fs["D2"] >> D2;
 
     fs.open(extrinsic_filename, FileStorage::READ);
-    if(!fs.isOpened())
-    {
+    if(!fs.isOpened()){
         printf("Failed to open file %s\n", extrinsic_filename.c_str());
         return -1;
     }
@@ -86,34 +84,53 @@ int main(int argc, char** argv)
         disp16bit.convertTo(disp8bit, CV_8U, 255/(numberOfDisparities*16.)); //Convert disparity map to an 8-bit greyscale image so it can be displayed (Only for imshow, do not use for disparity calculations)
 
         //==================================Your code goes here===============================
+        ushort pixel_disp_print = disp16bit.at<ushort>(240,380);
+        int pixel_dist_print = 62500/pixel_disp_print;
+        cout<<pixel_disp_print<<endl;
+        cout<<pixel_dist_print<<" cm"<<endl;
 
+        //Sweep whole image for disparity of pixels and place in matrix
+        int y = 480, x = 640;
+        Mat distanceMap(y, x, CV_16U);
+        ushort pixel_dist = 0, old_pixel_dist = 0;
+        for(int ydx=0; ydx<y; ydx++){
+            for(int xdx=0; xdx<x; xdx++){
+                ushort pixel_disp = disp16bit.at<ushort>(ydx,xdx); //check current pixel disparity
+                if(pixel_disp != 0){
+                    old_pixel_dist = pixel_dist;
+                    pixel_dist = 62500/pixel_disp;
+                }else pixel_dist = old_pixel_dist;
+                if(pixel_dist > 20) pixel_dist = pixel_dist-10;
+                distanceMap.at<ushort>(ydx,xdx) = pixel_dist;
+            }
+        }
+        /*pixel_dist = 0, old_pixel_dist = 0;
+        for(int ydx=200; ydx<270; ydx++){
+            for(int xdx=310; xdx<480; xdx++){
+                ushort pixel_disp = disp16bit.at<ushort>(ydx,xdx); //check current pixel disparity
+                if(pixel_disp != 0){
+                    old_pixel_dist = pixel_dist;
+                    pixel_dist = 62500/pixel_disp;
+                }else{
+                    pixel_dist = old_pixel_dist;
+                }
+                pixelDistance.at<ushort>(ydx,xdx) += pixel_dist+1000;
+            }
+        }*/
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-        //display images untill x is pressed
+        cout<<distanceMap.size<<endl;
+        //display images until x is pressed
         int key=0;
-        while(waitKey(10)!='x')
-        {
+        while(waitKey(10)!='x'){
             imshow("left", Left);
             imshow("right", Right);
             imshow("disparity", disp8bit);
+            imshow("distance", distanceMap);
         }
 
         //move to next image
         ImageNum++;
-        if(ImageNum>7)
-        {
+        if(ImageNum>7){
             ImageNum=0;
         }
     }
