@@ -21,8 +21,7 @@ void lineRT(Mat &Src, Vec2f L, Vec3b color, int thickness){
     line(Src, pt1, pt2, color, thickness, LINE_AA);
 }
 
-int main()
-{
+int main(){
 
     //Open video file
     VideoCapture CarVideo("../Task5/DashCam.mp4");
@@ -37,22 +36,32 @@ int main()
         //open the next frame from the video file, or exit the loop if its the end
         Mat Frame;
         CarVideo.read(Frame);
-        if(Frame.empty()){
-            break;
-        }
+        if(Frame.empty()) break;
 
         //==========================Your code goes here==========================
         Mat outputFrame;
         Canny(Frame, outputFrame, 50, 100);
 
         int rhoRes = 1;
-        int Threshold = 330;
+        int Threshold = 270;
         vector<Vec2f> lines;
-        HoughLines(outputFrame, lines, rhoRes, CV_PI/180, Threshold, 0, 0);
+        HoughLines(outputFrame, lines, rhoRes, M_PI/180, Threshold, 0, 0);
 
         Vec3b color = cv::Vec3b(250,0,40);
         for(int i = 0; i < (int)lines.size(); i++){
-            lineRT(Frame, lines[i], color, 2);
+            if(lines[i](0) < 900){
+                //left lane
+                if(lines[i](0) > 0.1 && lines[i](1) > 0.1 && lines[i](1) < 1){
+                    lineRT(Frame, lines[i], color, 2);
+                    cout<<"new line "<<i<<endl;
+                    cout<<lines[i](0)<<endl<<lines[i](1)<<endl;
+                //right lane
+                }else if(lines[i](0) < -150 && lines[i](0) > -300 && lines[i](1) >= 2.3 && lines[i](1) < 3){
+                    lineRT(Frame, lines[i], color, 2);
+                    cout<<"new line "<<i<<endl;
+                    cout<<lines[i](0)<<endl<<lines[i](1)<<endl;
+                }
+            }
         }
 
         //display frame

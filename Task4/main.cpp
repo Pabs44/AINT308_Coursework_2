@@ -98,9 +98,8 @@ int main()
                 ushort pixel_disp = disp16bit.at<ushort>(ydx,xdx); //check current pixel disparity
                 if(pixel_disp != 0){
                     old_pixel_dist = pixel_dist;
-                    pixel_dist = 62500/pixel_disp;
+                    pixel_dist = 6250000/pixel_disp;
                 }else pixel_dist = old_pixel_dist;
-                if(pixel_dist > 20) pixel_dist = pixel_dist-10;
                 distanceMap.at<ushort>(ydx,xdx) = pixel_dist;
             }
         }
